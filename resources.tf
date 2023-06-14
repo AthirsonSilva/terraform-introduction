@@ -13,7 +13,6 @@ resource "aws_subnet" "mtc_public_subnet" {
   cidr_block              = "10.123.1.0/24"
   map_public_ip_on_launch = true
   availability_zone       = "sa-east-1a"
-
   tags = {
     Name = "dev-public"
   }
@@ -53,8 +52,25 @@ resource "aws_security_group" "mtc_sg" {
   vpc_id      = aws_vpc.mtc_vpc.id
 
   ingress {
-    from_port   = 0
-    to_port     = 0
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -90,10 +106,10 @@ resource "aws_instance" "dev_node" {
 
   provisioner "local-exec" {
     command = templatefile("./ssh-config.tpl", {
-      hostname      = self.public_ip,
-      user          = "ubuntu",
+      hostname     = self.public_ip,
+      user         = "ubuntu",
       identityfile = "~/.ssh/mtc_key"
     })
-    interpreter = [ "bash", "-c" ]
+    interpreter = ["bash", "-c"]
   }
 }
